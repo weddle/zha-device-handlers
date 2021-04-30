@@ -10,7 +10,7 @@ from zigpy.zcl.clusters.general import (
 from zigpy.zcl.clusters.measurement import TemperatureMeasurement
 from zigpy.zcl.clusters.security import IasZone
 
-from ..const import (
+from zhaquirks.const import (
     DEVICE_TYPE,
     ENDPOINTS,
     INPUT_CLUSTERS,
@@ -18,8 +18,8 @@ from ..const import (
     OUTPUT_CLUSTERS,
     PROFILE_ID,
 )
-from . import SAMJIN
-from ..smartthings import SmartThingsAccelCluster
+from zhaquirks.samjin import SAMJIN
+from zhaquirks.smartthings import SmartThingsAccelCluster
 
 DIAGNOSTICS_CLUSTER_ID = 0x0B05  # decimal = 2821
 

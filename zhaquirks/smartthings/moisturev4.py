@@ -6,29 +6,22 @@ from zigpy.zcl.clusters.measurement import TemperatureMeasurement
 from zigpy.zcl.clusters.security import IasZone
 
 from zhaquirks import PowerConfigurationCluster
-
-from . import SMART_THINGS
-from ..const import (
+from zhaquirks.const import (
     DEVICE_TYPE,
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
     OUTPUT_CLUSTERS,
     PROFILE_ID,
+    ZONE_TYPE,
 )
+from zhaquirks.smartthings import SMART_THINGS
 
 
 class CustomIasZone(CustomCluster, IasZone):
     """Custom IasZone cluster."""
 
-    MOISTURE_TYPE = 0x002A
-    ZONE_TYPE = 0x0001
-
-    def _update_attribute(self, attrid, value):
-        if attrid == self.ZONE_TYPE:
-            super()._update_attribute(attrid, self.MOISTURE_TYPE)
-        else:
-            super()._update_attribute(attrid, value)
+    _CONSTANT_ATTRIBUTES = {ZONE_TYPE: IasZone.ZoneType.Water_Sensor}
 
 
 class SmartThingsMoistureV4(CustomDevice):

@@ -11,16 +11,8 @@ from zigpy.zcl.clusters.general import (
     Scenes,
 )
 
-from .. import (
-    LUMI,
-    BasicCluster,
-    PowerConfigurationCluster,
-    RelativeHumidityCluster,
-    TemperatureMeasurementCluster,
-    XiaomiCustomDevice,
-)
-from ... import Bus
-from ...const import (
+from zhaquirks import Bus
+from zhaquirks.const import (
     DEVICE_TYPE,
     ENDPOINTS,
     INPUT_CLUSTERS,
@@ -28,6 +20,14 @@ from ...const import (
     OUTPUT_CLUSTERS,
     PROFILE_ID,
     SKIP_CONFIGURATION,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    BasicCluster,
+    RelativeHumidityCluster,
+    TemperatureMeasurementCluster,
+    XiaomiCustomDevice,
+    XiaomiPowerConfiguration,
 )
 
 TEMPERATURE_HUMIDITY_DEVICE_TYPE = 0x5F01
@@ -114,7 +114,7 @@ class Weather(XiaomiCustomDevice):
                 DEVICE_TYPE: TEMPERATURE_HUMIDITY_DEVICE_TYPE2,
                 INPUT_CLUSTERS: [
                     BasicCluster,
-                    PowerConfigurationCluster,
+                    XiaomiPowerConfiguration,
                     Identify.cluster_id,
                     TemperatureMeasurementCluster,
                     RelativeHumidityCluster,

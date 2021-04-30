@@ -1,4 +1,4 @@
-"""Phillips ROM001 device."""
+"""Philips ROM001 device."""
 from zigpy.profiles import zha
 from zigpy.quirks import CustomDevice
 from zigpy.zcl.clusters.general import (
@@ -13,31 +13,43 @@ from zigpy.zcl.clusters.general import (
 )
 from zigpy.zcl.clusters.lightlink import LightLink
 
-from ..const import (
+from zhaquirks.const import (
+    COMMAND,
     DEVICE_TYPE,
+    DOUBLE_PRESS,
     ENDPOINTS,
     INPUT_CLUSTERS,
+    LONG_PRESS,
+    LONG_RELEASE,
+    MODELS_INFO,
     OUTPUT_CLUSTERS,
     PROFILE_ID,
+    QUADRUPLE_PRESS,
+    QUINTUPLE_PRESS,
     SHORT_PRESS,
+    SHORT_RELEASE,
+    TRIPLE_PRESS,
     TURN_ON,
-    TURN_OFF,
-    COMMAND,
-    COMMAND_ON,
-    COMMAND_OFF_WITH_EFFECT,
+)
+from zhaquirks.philips import (
+    PHILIPS,
+    SIGNIFY,
+    PhilipsBasicCluster,
+    PhilipsRemoteCluster,
 )
 
 DEVICE_SPECIFIC_UNKNOWN = 64512
 
 
 class PhilipsROM001(CustomDevice):
-    """Phillips ROM001 device."""
+    """Philips ROM001 device."""
 
     signature = {
         #  <SimpleDescriptor endpoint=1 profile=260 device_type=2096
         #  device_version=1
         #  input_clusters=[0, 1, 3, 64512, 4096]
         #  output_clusters=[25, 0, 3, 4, 6, 8, 5, 4096]>
+        MODELS_INFO: [(PHILIPS, "ROM001"), (SIGNIFY, "ROM001")],
         ENDPOINTS: {
             1: {
                 PROFILE_ID: zha.PROFILE_ID,
@@ -60,7 +72,7 @@ class PhilipsROM001(CustomDevice):
                     LightLink.cluster_id,
                 ],
             }
-        }
+        },
     }
 
     replacement = {
@@ -69,10 +81,10 @@ class PhilipsROM001(CustomDevice):
                 PROFILE_ID: zha.PROFILE_ID,
                 DEVICE_TYPE: zha.DeviceType.NON_COLOR_SCENE_CONTROLLER,
                 INPUT_CLUSTERS: [
-                    Basic.cluster_id,
+                    PhilipsBasicCluster,
                     PowerConfiguration.cluster_id,
                     Identify.cluster_id,
-                    DEVICE_SPECIFIC_UNKNOWN,
+                    PhilipsRemoteCluster,
                     LightLink.cluster_id,
                 ],
                 OUTPUT_CLUSTERS: [
@@ -90,6 +102,12 @@ class PhilipsROM001(CustomDevice):
     }
 
     device_automation_triggers = {
-        (SHORT_PRESS, TURN_ON): {COMMAND: COMMAND_ON},
-        (SHORT_PRESS, TURN_OFF): {COMMAND: COMMAND_OFF_WITH_EFFECT},
+        (SHORT_PRESS, TURN_ON): {COMMAND: "on_press"},
+        (LONG_PRESS, TURN_ON): {COMMAND: "on_hold"},
+        (DOUBLE_PRESS, TURN_ON): {COMMAND: "on_double_press"},
+        (TRIPLE_PRESS, TURN_ON): {COMMAND: "on_triple_press"},
+        (QUADRUPLE_PRESS, TURN_ON): {COMMAND: "on_quadruple_press"},
+        (QUINTUPLE_PRESS, TURN_ON): {COMMAND: "on_quintuple_press"},
+        (SHORT_RELEASE, TURN_ON): {COMMAND: "on_short_release"},
+        (LONG_RELEASE, TURN_ON): {COMMAND: "on_long_release"},
     }

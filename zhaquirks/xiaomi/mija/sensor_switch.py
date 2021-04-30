@@ -12,9 +12,8 @@ from zigpy.zcl.clusters.general import (
     Scenes,
 )
 
-from .. import LUMI, BasicCluster, PowerConfigurationCluster, XiaomiCustomDevice
-from ... import CustomCluster
-from ...const import (
+from zhaquirks import CustomCluster
+from zhaquirks.const import (
     ARGS,
     CLICK_TYPE,
     COMMAND,
@@ -29,6 +28,7 @@ from ...const import (
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
+    NODE_DESCRIPTOR,
     OUTPUT_CLUSTERS,
     PROFILE_ID,
     QUADRUPLE_PRESS,
@@ -38,6 +38,13 @@ from ...const import (
     TRIPLE_PRESS,
     UNKNOWN,
     ZHA_SEND_EVENT,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    XIAOMI_NODE_DESC,
+    BasicCluster,
+    XiaomiPowerConfiguration,
+    XiaomiQuickInitDevice,
 )
 
 XIAOMI_CLUSTER_ID = 0xFFFF
@@ -52,7 +59,7 @@ CLICK_TYPE_MAP = {
 }
 
 
-class MijaButton(XiaomiCustomDevice):
+class MijaButton(XiaomiQuickInitDevice):
     """Mija button device."""
 
     def __init__(self, *args, **kwargs):
@@ -106,6 +113,7 @@ class MijaButton(XiaomiCustomDevice):
         #       Level control (8)
         #       Ota (25)
         MODELS_INFO: [(LUMI, "lumi.sensor_switch")],
+        NODE_DESCRIPTOR: XIAOMI_NODE_DESC,
         ENDPOINTS: {
             1: {
                 PROFILE_ID: zha.PROFILE_ID,
@@ -137,7 +145,7 @@ class MijaButton(XiaomiCustomDevice):
                 INPUT_CLUSTERS: [
                     Identify.cluster_id,
                     BasicCluster,
-                    PowerConfigurationCluster,
+                    XiaomiPowerConfiguration,
                 ],
                 OUTPUT_CLUSTERS: [
                     BasicCluster,

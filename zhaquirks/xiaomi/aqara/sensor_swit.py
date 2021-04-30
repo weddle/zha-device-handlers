@@ -4,9 +4,8 @@ import logging
 from zigpy.profiles import zha
 from zigpy.zcl.clusters.general import Basic, MultistateInput, OnOff
 
-from .. import LUMI, BasicCluster, PowerConfigurationCluster, XiaomiCustomDevice
-from ... import CustomCluster
-from ...const import (
+from zhaquirks import CustomCluster
+from zhaquirks.const import (
     COMMAND,
     COMMAND_DOUBLE,
     COMMAND_HOLD,
@@ -27,6 +26,12 @@ from ...const import (
     SKIP_CONFIGURATION,
     VALUE,
     ZHA_SEND_EVENT,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    BasicCluster,
+    XiaomiCustomDevice,
+    XiaomiPowerConfiguration,
 )
 
 BUTTON_DEVICE_TYPE = 0x5F01
@@ -86,7 +91,7 @@ class SwitchAQ3V2(XiaomiCustomDevice):
                 DEVICE_TYPE: BUTTON_DEVICE_TYPE,
                 INPUT_CLUSTERS: [
                     Basic.cluster_id,
-                    PowerConfigurationCluster.cluster_id,
+                    XiaomiPowerConfiguration.cluster_id,
                     OnOff.cluster_id,
                     MultistateInput.cluster_id,
                 ],
@@ -101,7 +106,7 @@ class SwitchAQ3V2(XiaomiCustomDevice):
                 DEVICE_TYPE: zha.DeviceType.REMOTE_CONTROL,
                 INPUT_CLUSTERS: [
                     BasicCluster,
-                    PowerConfigurationCluster,
+                    XiaomiPowerConfiguration,
                     MultistateInputCluster,
                 ],
                 OUTPUT_CLUSTERS: [Basic.cluster_id, OnOff.cluster_id],

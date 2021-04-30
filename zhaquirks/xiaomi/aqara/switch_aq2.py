@@ -4,8 +4,7 @@ import logging
 from zigpy.profiles import zha
 from zigpy.zcl.clusters.general import Basic, Groups, OnOff
 
-from .. import LUMI, BasicCluster, PowerConfigurationCluster, XiaomiCustomDevice
-from ...const import (
+from zhaquirks.const import (
     ARGS,
     ATTRIBUTE_ID,
     ATTRIBUTE_NAME,
@@ -19,13 +18,22 @@ from ...const import (
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
+    NODE_DESCRIPTOR,
     OUTPUT_CLUSTERS,
     PROFILE_ID,
+    QUADRUPLE_PRESS,
     SHORT_PRESS,
     SKIP_CONFIGURATION,
     TRIPLE_PRESS,
     UNKNOWN,
     VALUE,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    XIAOMI_NODE_DESC,
+    BasicCluster,
+    XiaomiPowerConfiguration,
+    XiaomiQuickInitDevice,
 )
 
 BUTTON_DEVICE_TYPE = 0x5F01
@@ -35,7 +43,7 @@ XIAOMI_CLUSTER_ID = 0xFFFF
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchAQ2(XiaomiCustomDevice):
+class SwitchAQ2(XiaomiQuickInitDevice):
     """Aqara button device."""
 
     signature = {
@@ -44,6 +52,7 @@ class SwitchAQ2(XiaomiCustomDevice):
         # input_clusters=[0, 6, 65535]
         # output_clusters=[0, 4, 65535]>
         MODELS_INFO: [(LUMI, "lumi.sensor_switch.aq2")],
+        NODE_DESCRIPTOR: XIAOMI_NODE_DESC,
         ENDPOINTS: {
             1: {
                 PROFILE_ID: zha.PROFILE_ID,
@@ -65,7 +74,7 @@ class SwitchAQ2(XiaomiCustomDevice):
                 DEVICE_TYPE: zha.DeviceType.REMOTE_CONTROL,
                 INPUT_CLUSTERS: [
                     BasicCluster,
-                    PowerConfigurationCluster,
+                    XiaomiPowerConfiguration,
                     XIAOMI_CLUSTER_ID,
                 ],
                 OUTPUT_CLUSTERS: [
@@ -93,8 +102,14 @@ class SwitchAQ2(XiaomiCustomDevice):
         },
         (TRIPLE_PRESS, TRIPLE_PRESS): {
             COMMAND: COMMAND_TRIPLE,
-            CLUSTER_ID: 0,
+            CLUSTER_ID: 6,
             ENDPOINT_ID: 1,
             ARGS: {ATTRIBUTE_ID: 32768, ATTRIBUTE_NAME: UNKNOWN, VALUE: 3},
+        },
+        (QUADRUPLE_PRESS, QUADRUPLE_PRESS): {
+            COMMAND: COMMAND_ATTRIBUTE_UPDATED,
+            CLUSTER_ID: 6,
+            ENDPOINT_ID: 1,
+            ARGS: {ATTRIBUTE_ID: 32768, ATTRIBUTE_NAME: UNKNOWN, VALUE: 4},
         },
     }

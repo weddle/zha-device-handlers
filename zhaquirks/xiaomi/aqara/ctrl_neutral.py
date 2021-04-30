@@ -1,33 +1,53 @@
 """Xiaomi aqara single key wall switch devices."""
 import logging
 
+from zigpy import types as t
 from zigpy.profiles import zha
-from zigpy.quirks import CustomCluster
 from zigpy.zcl.clusters.general import (
     AnalogInput,
     Basic,
+    BinaryOutput,
+    DeviceTemperature,
     Groups,
     Identify,
     MultistateInput,
     OnOff,
     Ota,
     Scenes,
-    DeviceTemperature,
     Time,
-    BinaryOutput,
 )
 
-from .. import LUMI, BasicCluster, PowerConfigurationCluster, XiaomiCustomDevice
-from ...const import (
+from zhaquirks import EventableCluster
+from zhaquirks.const import (
+    ARGS,
+    ATTRIBUTE_ID,
+    ATTRIBUTE_NAME,
+    BUTTON,
+    CLUSTER_ID,
+    COMMAND,
+    COMMAND_ATTRIBUTE_UPDATED,
+    COMMAND_DOUBLE,
+    COMMAND_HOLD,
+    COMMAND_RELEASE,
     DEVICE_TYPE,
+    ENDPOINT_ID,
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
     OUTPUT_CLUSTERS,
     PROFILE_ID,
     SKIP_CONFIGURATION,
+    VALUE,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    BasicCluster,
+    OnOffCluster,
+    XiaomiCustomDevice,
+    XiaomiPowerConfiguration,
 )
 
+ATTRIBUTE_ON_OFF = "on_off"
 DOUBLE = "double"
 HOLD = "long press"
 PRESS_TYPES = {0: "long press", 1: "single", 2: "double"}
@@ -45,33 +65,30 @@ _LOGGER = logging.getLogger(__name__)
 # double click 0xCFF1F00
 
 
-class XiaomiOnOffCluster(OnOff, CustomCluster):
-    """Aqara wall switch cluster."""
+class CtrlNeutral(XiaomiCustomDevice):
+    """Aqara single and double key switch device."""
 
-    server_commands = {0x0000: ("off", (), False), 0x0001: ("on", (), False)}
+    class BasicClusterDecoupled(BasicCluster):
+        """Adds attributes for decoupled mode."""
 
-    def command(self, command, *args, manufacturer=None, expect_reply=True):
-        """Command handler."""
-        src_ep = 1
-        dst_ep = 2
-        seq = self._endpoint.device.application.get_sequence()
-        return self._endpoint.device.application.request(
-            self._endpoint.device,
-            zha.PROFILE_ID,
-            OnOff.cluster_id,
-            src_ep,
-            dst_ep,
-            seq,
-            bytes([src_ep, seq, command]),
-            expect_reply=expect_reply,
-        )
+        # Known Options for 'decoupled_mode_<button>':
+        # * 254 (decoupled)
+        # * 18 (relay controlled)
+        manufacturer_attributes = {
+            0xFF22: ("decoupled_mode_left", t.uint8_t),
+            0xFF23: ("decoupled_mode_right", t.uint8_t),
+        }
 
-
-class CtrlNeutral1(XiaomiCustomDevice):
-    """Aqara single key switch device."""
+    class WallSwitchOnOffCluster(EventableCluster, OnOff):
+        """WallSwitchOnOffCluster: fire events corresponding to press type."""
 
     signature = {
-        MODELS_INFO: [(LUMI, "lumi.ctrl_neutral1")],
+        MODELS_INFO: [
+            (LUMI, "lumi.ctrl_neutral1"),
+            (LUMI, "lumi.ctrl_neutral2"),
+            (LUMI, "lumi.switch.b1lacn02"),
+            (LUMI, "lumi.switch.b2lacn02"),
+        ],
         ENDPOINTS: {
             # <SimpleDescriptor endpoint=1 profile=260 device_type=6
             # device_version=2
@@ -83,7 +100,7 @@ class CtrlNeutral1(XiaomiCustomDevice):
                 INPUT_CLUSTERS: [
                     Basic.cluster_id,
                     Identify.cluster_id,
-                    PowerConfigurationCluster.cluster_id,
+                    XiaomiPowerConfiguration.cluster_id,
                     DeviceTemperature.cluster_id,
                     Ota.cluster_id,
                     Time.cluster_id,
@@ -168,13 +185,64 @@ class CtrlNeutral1(XiaomiCustomDevice):
         ENDPOINTS: {
             1: {
                 DEVICE_TYPE: zha.DeviceType.REMOTE_CONTROL,
-                INPUT_CLUSTERS: [BasicCluster],
-                OUTPUT_CLUSTERS: [],
+                INPUT_CLUSTERS: [
+                    BasicClusterDecoupled,
+                    Identify.cluster_id,
+                    XiaomiPowerConfiguration.cluster_id,
+                    DeviceTemperature.cluster_id,
+                    Ota.cluster_id,
+                    Time.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [Basic.cluster_id, Time.cluster_id, Ota.cluster_id],
             },
             2: {
                 DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
-                INPUT_CLUSTERS: [BasicCluster, XiaomiOnOffCluster],
+                INPUT_CLUSTERS: [
+                    BinaryOutput.cluster_id,
+                    OnOffCluster,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                ],
                 OUTPUT_CLUSTERS: [],
             },
+            3: {
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                INPUT_CLUSTERS: [
+                    BinaryOutput.cluster_id,
+                    OnOffCluster,
+                    Groups.cluster_id,
+                    Scenes.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [],
+            },
+            4: {
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                INPUT_CLUSTERS: [
+                    MultistateInput.cluster_id,
+                    WallSwitchOnOffCluster,
+                ],
+                OUTPUT_CLUSTERS: [],
+            },
+        },
+    }
+
+    device_automation_triggers = {
+        (COMMAND_HOLD, BUTTON): {
+            ENDPOINT_ID: 4,
+            CLUSTER_ID: 6,
+            COMMAND: COMMAND_ATTRIBUTE_UPDATED,
+            ARGS: {ATTRIBUTE_ID: 0, ATTRIBUTE_NAME: ATTRIBUTE_ON_OFF, VALUE: 0},
+        },
+        (COMMAND_RELEASE, BUTTON): {
+            ENDPOINT_ID: 4,
+            CLUSTER_ID: 6,
+            COMMAND: COMMAND_ATTRIBUTE_UPDATED,
+            ARGS: {ATTRIBUTE_ID: 0, ATTRIBUTE_NAME: ATTRIBUTE_ON_OFF, VALUE: 1},
+        },
+        (COMMAND_DOUBLE, BUTTON): {
+            ENDPOINT_ID: 4,
+            CLUSTER_ID: 6,
+            COMMAND: COMMAND_ATTRIBUTE_UPDATED,
+            ARGS: {ATTRIBUTE_ID: 0, ATTRIBUTE_NAME: ATTRIBUTE_ON_OFF, VALUE: 2},
         },
     }

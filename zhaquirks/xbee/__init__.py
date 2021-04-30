@@ -17,6 +17,7 @@ the xbee stays alive in Home Assistant.
 """
 
 import logging
+from typing import Any, List, Optional, Union
 
 from zigpy.quirks import CustomDevice
 import zigpy.types as t
@@ -29,8 +30,8 @@ from zigpy.zcl.clusters.general import (
     OnOff,
 )
 
-from .. import EventableCluster, LocalDataCluster
-from ..const import ENDPOINTS, INPUT_CLUSTERS, OUTPUT_CLUSTERS
+from zhaquirks import EventableCluster, LocalDataCluster
+from zhaquirks.const import ENDPOINTS, INPUT_CLUSTERS, OUTPUT_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,18 +79,20 @@ ENDPOINT_TO_AT = {
 class XBeeOnOff(LocalDataCluster, OnOff):
     """XBee on/off cluster."""
 
-    async def command(self, command, *args, manufacturer=None, expect_reply=True):
+    async def command(
+        self, command_id, *args, manufacturer=None, expect_reply=True, tsn=None
+    ):
         """Xbee change pin state command, requires zigpy_xbee."""
         pin_name = ENDPOINT_TO_AT.get(self._endpoint.endpoint_id)
-        if command not in [0, 1] or pin_name is None:
-            return super().command(command, *args)
-        if command == 0:
+        if command_id not in [0, 1] or pin_name is None:
+            return super().command(command_id, *args)
+        if command_id == 0:
             pin_cmd = DIO_PIN_LOW
         else:
             pin_cmd = DIO_PIN_HIGH
         result = await self._endpoint.device.remote_at(pin_name, pin_cmd)
         if result == foundation.Status.SUCCESS:
-            self._update_attribute(ATTR_ON_OFF, command)
+            self._update_attribute(ATTR_ON_OFF, command_id)
         return 0, result
 
 
@@ -233,12 +236,20 @@ class XBeeCommon(CustomDevice):
                     data[sample_index:],
                 )
 
-        def handle_cluster_request(self, tsn, command_id, args):
+        def handle_cluster_request(
+            self,
+            hdr: foundation.ZCLHeader,
+            args: List[Any],
+            *,
+            dst_addressing: Optional[
+                Union[t.Addressing.Group, t.Addressing.IEEE, t.Addressing.NWK]
+            ] = None,
+        ):
             """Handle the cluster request.
 
             Update the digital pin states
             """
-            if command_id == ON_OFF_CMD:
+            if hdr.command_id == ON_OFF_CMD:
                 values = args[0]
                 if "digital_pins" in values and "digital_samples" in values:
                     # Update digital inputs
@@ -265,7 +276,7 @@ class XBeeCommon(CustomDevice):
                             / (10.23 if pin != 7 else 1000),  # supply voltage is in mV
                         )
             else:
-                super().handle_cluster_request(tsn, command_id, args)
+                super().handle_cluster_request(hdr, args)
 
         attributes = {0x0055: ("present_value", t.Bool)}
         client_commands = {0x0000: ("io_sample", (IOSample,), False)}
@@ -298,7 +309,9 @@ class XBeeCommon(CustomDevice):
                 data = str(data, encoding="latin1")
                 return (cls(data), b"")
 
-        def command(self, command, *args, manufacturer=None, expect_reply=False):
+        def command(
+            self, command_id, *args, manufacturer=None, expect_reply=False, tsn=None
+        ):
             """Handle outgoing data."""
             data = self.BinaryString(args[0]).serialize()
             return self._endpoint.device.application.request(
@@ -312,14 +325,22 @@ class XBeeCommon(CustomDevice):
                 expect_reply=False,
             )
 
-        def handle_cluster_request(self, tsn, command_id, args):
+        def handle_cluster_request(
+            self,
+            hdr: foundation.ZCLHeader,
+            args: List[Any],
+            *,
+            dst_addressing: Optional[
+                Union[t.Addressing.Group, t.Addressing.IEEE, t.Addressing.NWK]
+            ] = None,
+        ):
             """Handle incoming data."""
-            if command_id == DATA_IN_CMD:
+            if hdr.command_id == DATA_IN_CMD:
                 self._endpoint.out_clusters[
                     LevelControl.cluster_id
-                ].handle_cluster_request(tsn, command_id, args[0])
+                ].handle_cluster_request(hdr, args[0])
             else:
-                super().handle_cluster_request(tsn, command_id, args)
+                super().handle_cluster_request(hdr, args)
 
         attributes = {}
         client_commands = {0x0000: ("send_data", (BinaryString,), None)}
@@ -328,10 +349,9 @@ class XBeeCommon(CustomDevice):
     replacement = {
         ENDPOINTS: {
             232: {
-                "manufacturer": "XBEE",
-                "model": "xbee.io",
                 INPUT_CLUSTERS: [DigitalIOCluster, SerialDataCluster],
                 OUTPUT_CLUSTERS: [SerialDataCluster, EventRelayCluster],
             }
-        }
+        },
+        "manufacturer": "Digi",
     }

@@ -1,6 +1,6 @@
-"""Osram A19 tunable white device."""
+"""Osram tunable white device."""
 from zigpy.profiles import zha
-from zigpy.quirks import CustomDevice
+from zigpy.quirks import CustomCluster, CustomDevice
 from zigpy.zcl.clusters.general import (
     Basic,
     Groups,
@@ -13,17 +13,34 @@ from zigpy.zcl.clusters.general import (
 from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
 from zigpy.zcl.clusters.lighting import Color
 
-from . import OsramLightCluster
-from ..const import DEVICE_TYPE, ENDPOINTS, INPUT_CLUSTERS, OUTPUT_CLUSTERS, PROFILE_ID
+from zhaquirks.const import (
+    DEVICE_TYPE,
+    ENDPOINTS,
+    INPUT_CLUSTERS,
+    MODELS_INFO,
+    OUTPUT_CLUSTERS,
+    PROFILE_ID,
+)
+from zhaquirks.osram import OSRAM, OsramLightCluster
 
 
-class A19TunableWhite(CustomDevice):
+class OsramColorCluster(CustomCluster, Color):
     """Osram A19 tunable white device."""
+
+    _CONSTANT_ATTRIBUTES = {0x400A: 16, 0x400C: 370}
+
+
+class OsramTunableWhite(CustomDevice):
+    """Osram tunable white device."""
 
     signature = {
         # <SimpleDescriptor endpoint=3 profile=260 device_type=258
         # device_version=2 input_clusters=[0, 3, 4, 5, 6, 8, 768, 64527]
         # output_clusters=[25]>
+        MODELS_INFO: [
+            (OSRAM, "LIGHTIFY A19 Tunable White"),
+            (OSRAM, "LIGHTIFY RT Tunable White"),
+        ],
         ENDPOINTS: {
             3: {
                 PROFILE_ID: zha.PROFILE_ID,
@@ -41,7 +58,7 @@ class A19TunableWhite(CustomDevice):
                 ],
                 OUTPUT_CLUSTERS: [Ota.cluster_id],
             }
-        }
+        },
     }
 
     replacement = {
@@ -56,7 +73,7 @@ class A19TunableWhite(CustomDevice):
                     Scenes.cluster_id,
                     OnOff.cluster_id,
                     LevelControl.cluster_id,
-                    Color.cluster_id,
+                    OsramColorCluster,
                     ElectricalMeasurement.cluster_id,
                     OsramLightCluster,
                 ],

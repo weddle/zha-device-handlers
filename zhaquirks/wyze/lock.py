@@ -1,8 +1,11 @@
 """Support for the Wyze lock."""
 import logging
+from typing import Any, List, Optional, Union
 
 from zigpy.profiles import zha
 from zigpy.quirks import CustomCluster, CustomDevice
+import zigpy.types as t
+from zigpy.zcl import foundation
 from zigpy.zcl.clusters.closures import DoorLock
 from zigpy.zcl.clusters.general import (
     Basic,
@@ -23,10 +26,10 @@ from ..const import (
     ENDPOINTS,
     INPUT_CLUSTERS,
     MODELS_INFO,
-    OUTPUT_CLUSTERS,
-    PROFILE_ID,
     OFF,
     ON,
+    OUTPUT_CLUSTERS,
+    PROFILE_ID,
     ZONE_STATE,
 )
 
@@ -76,8 +79,16 @@ class WyzeCluster(CustomCluster, Basic):
     attributes = {}
     server_commands = {}
     client_commands = {}
-    
-    def handle_message(self, hdr, args, dst_addressing):
+
+    def handle_message(
+        self,
+        hdr: foundation.ZCLHeader,
+        args: List[Any],
+        *,
+        dst_addressing: Optional[
+            Union[t.Addressing.Group, t.Addressing.IEEE, t.Addressing.NWK]
+        ] = None,
+    ):
         """Handle a message on this cluster."""
         self.debug("ZCL request 0x%04x: %s", hdr.command_id, args)
         i = 0
@@ -94,25 +105,25 @@ class WyzeCluster(CustomCluster, Basic):
             args[56],
             args[57],
         )
-        if args[52] == 229 and args[41] == 66:
+        if args[52] == 180 and args[41] == 165:
             self.warning("the lock is unlocked via the app")
             self.endpoint.device.lock_bus.listener_event("lock_event", 2)
-        elif args[52] == 229 and args[41] == 69:
+        elif args[52] == 180 and args[41] == 162:
             self.warning("the lock is locked via the app")
             self.endpoint.device.lock_bus.listener_event("lock_event", 1)
-        elif args[52] == 225 and args[41] == 66:
+        elif args[52] == 176 and args[41] == 165:
             self.warning("the lock is unlocked manually")
             self.endpoint.device.lock_bus.listener_event("lock_event", 2)
-        elif args[52] == 225 and args[41] == 69:
+        elif args[52] == 176 and args[41] == 162:
             self.warning("the lock is locked manually")
             self.endpoint.device.lock_bus.listener_event("lock_event", 1)
         elif args[52] == 189 and args[41] == 162:
             self.warning("the lock is locked via auto lock")
             self.endpoint.device.lock_bus.listener_event("lock_event", 1)
-        if args[52] == 27 and args[41] == 86:
+        if args[52] == 74 and args[41] == 177:
             self.warning("the door is open")
             self.endpoint.device.motion_bus.listener_event("motion_event", ON)
-        elif args[52] == 27 and args[41] == 85:
+        elif args[52] == 74 and args[41] == 178:
             self.warning("the door is closed")
             self.endpoint.device.motion_bus.listener_event("motion_event", OFF)
 

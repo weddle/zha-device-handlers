@@ -11,13 +11,13 @@ from zigpy.zcl.clusters.general import (
     PowerConfiguration,
 )
 
-from ..const import (
+from zhaquirks.const import (
     BUTTON_1,
     BUTTON_2,
     CLUSTER_ID,
     COMMAND,
-    COMMAND_ON,
     COMMAND_OFF,
+    COMMAND_ON,
     DEVICE_TYPE,
     ENDPOINT_ID,
     ENDPOINTS,

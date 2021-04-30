@@ -13,9 +13,8 @@ from zigpy.zcl.clusters.general import (
     Scenes,
 )
 
-from .. import LUMI, BasicCluster, PowerConfigurationCluster, XiaomiCustomDevice
-from ... import CustomCluster
-from ...const import (
+from zhaquirks import CustomCluster
+from zhaquirks.const import (
     ATTR_ID,
     BUTTON,
     BUTTON_1,
@@ -35,6 +34,12 @@ from ...const import (
     SKIP_CONFIGURATION,
     VALUE,
     ZHA_SEND_EVENT,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    BasicCluster,
+    XiaomiCustomDevice,
+    XiaomiPowerConfiguration,
 )
 
 BOTH_BUTTONS = "both_buttons"
@@ -92,7 +97,11 @@ class RemoteB286ACN01(XiaomiCustomDevice):
         # device_version=1
         # input_clusters=[0, 3, 25, 65535, 18]
         # output_clusters=[0, 4, 3, 5, 25, 65535, 18]>
-        MODELS_INFO: [(LUMI, "lumi.remote.b286acn01"), (LUMI, "lumi.sensor_86sw2")],
+        MODELS_INFO: [
+            (LUMI, "lumi.remote.b286acn01"),
+            (LUMI, "lumi.remote.b286acn02"),
+            (LUMI, "lumi.sensor_86sw2"),
+        ],
         ENDPOINTS: {
             1: {
                 PROFILE_ID: zha.PROFILE_ID,
@@ -157,7 +166,7 @@ class RemoteB286ACN01(XiaomiCustomDevice):
                 DEVICE_TYPE: zha.DeviceType.REMOTE_CONTROL,
                 INPUT_CLUSTERS: [
                     BasicCluster,
-                    PowerConfigurationCluster,
+                    XiaomiPowerConfiguration,
                     Identify.cluster_id,
                     Ota.cluster_id,
                     XIAOMI_CLUSTER_ID,

@@ -4,14 +4,15 @@ from zigpy.profiles import zha
 from zigpy.quirks import CustomDevice
 from zigpy.zcl.clusters.general import (
     Basic,
-    PowerConfiguration,
     Identify,
-    PollControl,
     Ota,
+    PollControl,
+    PowerConfiguration,
 )
-from zigpy.zcl.clusters.security import IasZone
 from zigpy.zcl.clusters.measurement import TemperatureMeasurement
-from . import SmartThingsAccelCluster
+from zigpy.zcl.clusters.security import IasZone
+
+from zhaquirks.smartthings import SmartThingsAccelCluster
 
 
 class SmartthingsMultiPurposeSensor(CustomDevice):

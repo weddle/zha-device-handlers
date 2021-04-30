@@ -2,6 +2,7 @@
 from zigpy.profiles import zha
 from zigpy.quirks import CustomDevice
 from zigpy.zcl.clusters.general import (
+    Alarms,
     Basic,
     Groups,
     Identify,
@@ -11,10 +12,11 @@ from zigpy.zcl.clusters.general import (
     PollControl,
     PowerConfiguration,
 )
+from zigpy.zcl.clusters.homeautomation import Diagnostic
 from zigpy.zcl.clusters.lightlink import LightLink
 
-from .. import DoublingPowerConfigurationCluster
-from ..const import (
+from zhaquirks import DoublingPowerConfigurationCluster
+from zhaquirks.const import (
     ARGS,
     CLUSTER_ID,
     COMMAND,
@@ -41,7 +43,7 @@ from ..const import (
     SHORT_PRESS,
     TURN_ON,
 )
-from . import IKEA, LightLinkCluster, ScenesCluster
+from zhaquirks.ikea import IKEA, LightLinkCluster, ScenesCluster
 
 IKEA_CLUSTER_ID = 0xFC7C  # decimal = 64636
 
@@ -166,3 +168,64 @@ class IkeaTradfriRemote(CustomDevice):
             ARGS: [3328, 0],
         },
     }
+
+
+class IkeaTradfriRemote2(IkeaTradfriRemote):
+    """Custom device representing IKEA of Sweden TRADFRI 5 button remote control."""
+
+    signature = {
+        # <SimpleDescriptor endpoint = 1 profile = 260 device_type = 2064
+        # device_version = 2 input_clusters = [0, 1, 3, 9, 2821, 4096]
+        # output_clusters = [3, 4, 5, 6, 8, 25, 4096]
+        MODELS_INFO: [(IKEA, "TRADFRI remote control")],
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.COLOR_SCENE_CONTROLLER,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    PowerConfiguration.cluster_id,
+                    Identify.cluster_id,
+                    Alarms.cluster_id,
+                    Diagnostic.cluster_id,
+                    LightLink.cluster_id,
+                ],
+                OUTPUT_CLUSTERS: [
+                    Identify.cluster_id,
+                    Groups.cluster_id,
+                    ScenesCluster.cluster_id,
+                    OnOff.cluster_id,
+                    LevelControl.cluster_id,
+                    Ota.cluster_id,
+                    LightLink.cluster_id,
+                ],
+            }
+        },
+    }
+
+    replacement = {
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.COLOR_SCENE_CONTROLLER,
+                INPUT_CLUSTERS: [
+                    Basic.cluster_id,
+                    DoublingPowerConfigurationCluster,
+                    Identify.cluster_id,
+                    Alarms.cluster_id,
+                    LightLinkCluster,
+                ],
+                OUTPUT_CLUSTERS: [
+                    Identify.cluster_id,
+                    Groups.cluster_id,
+                    ScenesCluster,
+                    OnOff.cluster_id,
+                    LevelControl.cluster_id,
+                    Ota.cluster_id,
+                    LightLink.cluster_id,
+                ],
+            }
+        }
+    }
+
+    device_automation_triggers = IkeaTradfriRemote.device_automation_triggers.copy()

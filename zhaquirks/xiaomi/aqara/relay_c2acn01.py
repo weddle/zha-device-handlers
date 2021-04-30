@@ -17,15 +17,8 @@ from zigpy.zcl.clusters.general import (
 )
 from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
 
-from .. import (
-    LUMI,
-    AnalogInputCluster,
-    BasicCluster,
-    ElectricalMeasurementCluster,
-    XiaomiCustomDevice,
-)
-from ... import Bus
-from ...const import (
+from zhaquirks import Bus
+from zhaquirks.const import (
     DEVICE_TYPE,
     ENDPOINTS,
     INPUT_CLUSTERS,
@@ -33,6 +26,14 @@ from ...const import (
     OUTPUT_CLUSTERS,
     PROFILE_ID,
     SKIP_CONFIGURATION,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    AnalogInputCluster,
+    BasicCluster,
+    BinaryOutputInterlock,
+    ElectricalMeasurementCluster,
+    XiaomiCustomDevice,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ class Relay(XiaomiCustomDevice):
                     Identify.cluster_id,
                     OnOff.cluster_id,
                     Scenes.cluster_id,
-                    BinaryOutput.cluster_id,
+                    BinaryOutputInterlock,
                     Time.cluster_id,
                     ElectricalMeasurementCluster,
                     AnalogInputCluster,
@@ -116,7 +117,7 @@ class Relay(XiaomiCustomDevice):
                 DEVICE_TYPE: zha.DeviceType.DIMMABLE_LIGHT,
                 INPUT_CLUSTERS: [
                     OnOff.cluster_id,
-                    BinaryOutput.cluster_id,
+                    BinaryOutputInterlock,
                     Groups.cluster_id,
                     Scenes.cluster_id,
                 ],

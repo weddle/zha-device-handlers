@@ -18,15 +18,8 @@ from zigpy.zcl.clusters.general import (
 )
 from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
 
-from .. import (
-    LUMI,
-    AnalogInputCluster,
-    BasicCluster,
-    ElectricalMeasurementCluster,
-    XiaomiCustomDevice,
-)
-from ... import Bus
-from ...const import (
+from zhaquirks import Bus
+from zhaquirks.const import (
     DEVICE_TYPE,
     ENDPOINTS,
     INPUT_CLUSTERS,
@@ -34,6 +27,13 @@ from ...const import (
     OUTPUT_CLUSTERS,
     PROFILE_ID,
     SKIP_CONFIGURATION,
+)
+from zhaquirks.xiaomi import (
+    LUMI,
+    AnalogInputCluster,
+    BasicCluster,
+    ElectricalMeasurementCluster,
+    XiaomiCustomDevice,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class Plug(XiaomiCustomDevice):
         super().__init__(*args, **kwargs)
 
     signature = {
-        MODELS_INFO: [(LUMI, "lumi.plug.maus01")],
+        MODELS_INFO: [(LUMI, "lumi.plug.maus01"), (LUMI, "lumi.plug.mitw01")],
         ENDPOINTS: {
             # <SimpleDescriptor endpoint=1 profile=260 device_type=81
             # device_version=1
