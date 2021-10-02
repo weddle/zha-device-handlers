@@ -18,9 +18,10 @@ from zigpy.zcl.clusters.general import (
 from zigpy.zcl.clusters.homeautomation import Diagnostic
 from zigpy.zcl.clusters.security import IasZone
 
-from . import YUNDING
-from .. import Bus, LocalDataCluster
-from ..const import (
+"""from . import YUNDING"""
+YUNDING = "Yunding"
+from zhaquirks import Bus, LocalDataCluster
+from zhaquirks.const import (
     CLUSTER_COMMAND,
     DEVICE_TYPE,
     ENDPOINTS,
@@ -105,25 +106,35 @@ class WyzeCluster(CustomCluster, Basic):
             args[56],
             args[57],
         )
-        if args[52] == 180 and args[41] == 165:
+        
+        
+        # Values we care about
+        
+        fakes = [117]
+        
+        # Ignore non lock/unlock event
+        if args[0] in fakes:
+            return
+        
+        if args[52] == 122 and args[41] == 197:
             self.warning("the lock is unlocked via the app")
             self.endpoint.device.lock_bus.listener_event("lock_event", 2)
-        elif args[52] == 180 and args[41] == 162:
+        elif args[52] == 122 and args[41] == 194:
             self.warning("the lock is locked via the app")
             self.endpoint.device.lock_bus.listener_event("lock_event", 1)
-        elif args[52] == 176 and args[41] == 165:
+        elif args[52] == 126 and args[41] == 197:
             self.warning("the lock is unlocked manually")
             self.endpoint.device.lock_bus.listener_event("lock_event", 2)
-        elif args[52] == 176 and args[41] == 162:
+        elif args[52] == 126 and args[41] == 194:
             self.warning("the lock is locked manually")
             self.endpoint.device.lock_bus.listener_event("lock_event", 1)
         elif args[52] == 189 and args[41] == 162:
             self.warning("the lock is locked via auto lock")
             self.endpoint.device.lock_bus.listener_event("lock_event", 1)
-        if args[52] == 74 and args[41] == 177:
+        if args[52] == 132 and args[41] == 209:
             self.warning("the door is open")
             self.endpoint.device.motion_bus.listener_event("motion_event", ON)
-        elif args[52] == 74 and args[41] == 178:
+        elif args[52] == 132 and args[41] == 210:
             self.warning("the door is closed")
             self.endpoint.device.motion_bus.listener_event("motion_event", OFF)
 
